@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Happy Birthday Amma, from Smaya</title>
+
+  <!-- CDNs for Tailwind CSS, Three.js, GSAP, and Canvas Confetti -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <!-- Google Fonts: Elegant Playfair Display, Clean Plus Jakarta Sans, and Warm Handwritten Caveat -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400..700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
+
+  <!-- Tailwind Configuration to map custom fonts -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            serif: ['"Playfair Display"', 'serif'],
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            handwritten: ['"Caveat"', 'cursive'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Layer 1: Cozy Cotton-Candy & Sunset Gold Aurora Background Styling */
+    .aurora-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -20;
+      overflow: hidden;
+      background-color: #0f0514;
+    }
+    .aurora {
+      position: absolute;
+      width: 150%;
+      height: 150%;
+      top: -25%;
+      left: -25%;
+      background:
+        radial-gradient(circle at 15% 25%, hsla(340, 95%, 70%, 0.35) 0%, transparent 45%),
+        radial-gradient(circle at 85% 35%, hsla(35, 100%, 75%, 0.25) 0%, transparent 45%),
+        radial-gradient(circle at 25% 75%, hsla(265, 85%, 65%, 0.25) 0%, transparent 45%),
+        radial-gradient(circle at 80% 80%, hsla(190, 90%, 70%, 0.22) 0%, transparent 45%);
+      filter: blur(55px);
+      animation: aurora-flow 24s ease-in-out infinite alternate;
+    }
+    @keyframes aurora-flow {
+      0% {
+        transform: translate(0px, 0px) rotate(0deg) scale(1);
+      }
+      50% {
+        transform: translate(30px, -40px) rotate(180deg) scale(1.1);
+      }
+      100% {
+        transform: translate(-30px, 30px) rotate(360deg) scale(1);
+      }
+    }
+
+    /* Glassmorphism Global Card Style with soft rose/peach border highlights */
+    .glass-card {
+      background: rgba(18, 8, 18, 0.45);
+      backdrop-filter: blur(28px) saturate(145%);
+      -webkit-backdrop-filter: blur(28px) saturate(145%);
+      border: 1px solid rgba(251, 113, 133, 0.18);
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+    }
+
+    /* Beat Animation for the Step 1 Heart Emoji */
+    @keyframes heartbeat {
+      0% { transform: scale(1); }
+      14% { transform: scale(1.12); }
+      28% { transform: scale(1); }
+      42% { transform: scale(1.12); }
+      70% { transform: scale(1); }
+      100% { transform: scale(1); }
+    }
+    .animate-heartbeat {
+      animation: heartbeat 1.5s infinite ease-in-out;
+    }
+
+    /* Perspective utility for the Step 4 Polaroid tilt effect */
+    .perspective-1000 {
+      perspective: 1000px;
+    }
+  </style>
+</head>
+<body class="bg-[#0f0514] text-stone-200 min-h-screen flex flex-col justify-between overflow-x-hidden font-sans">
+
+  <!-- Background Music Audio Element (Hosted securely on Archive.org) -->
+  <audio id="bg-music" src="https://archive.org/download/HappyBirthdayInstrumentalPianoViaInstrumentals.com.ng/Happy%20Birthday%20Instrumental%20Piano%20via%20instrumentals.com.ng.mp3" loop preload="auto"></audio>
+
+  <!-- Interactive Floating Music Toggle Button -->
+  <button id="music-toggle" onclick="toggleMusic()" class="fixed top-6 right-6 p-3 rounded-full bg-white/10 hover:bg-white/20 border border-rose-500/20 backdrop-blur-md text-stone-300 transition-all duration-300 z-50 flex items-center justify-center shadow-lg cursor-pointer" title="Toggle Background Music">
+    <!-- Speaker Playing Icon -->
+    <svg id="music-icon-on" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M12 18.75V5.25L7.75 9H4.5A1.5 1.5 0 003 10.5v3a1.5 1.5 0 001.5 1.5h3.25L12 18.75z" />
+    </svg>
+    <!-- Speaker Muted/Paused Icon -->
+    <svg id="music-icon-off" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+    </svg>
+  </button>
+
+  <!-- Aurora Base Dynamic Gradient Layer -->
+  <div class="aurora-container">
+    <div class="aurora"></div>
+  </div>
+
+  <!-- ThreeJS Canvas for 3D Floating Hearts Layer -->
+  <canvas id="three-canvas" class="fixed top-0 left-0 w-full h-full -z-10 pointer-events-none"></canvas>
+
+  <!-- Progress Bar Header Track -->
+  <div class="fixed top-6 left-1/2 -translate-x-1/2 w-64 h-1.5 bg-white/10 backdrop-blur-md rounded-full overflow-hidden border border-white/5 z-50">
+    <div id="progress-fill" class="h-full bg-gradient-to-r from-rose-400 via-pink-500 to-amber-400 w-[20%] transition-all duration-500 ease-out"></div>
+  </div>
+
+  <!-- Main Multi-Step Interactive Section -->
+  <main class="flex-grow flex items-center justify-center p-4 relative z-10 my-16">
+    <div class="w-full max-w-2xl flex items-center justify-center relative min-h-[500px]">
+
+      <!-- STEP 1: The Grand Welcome -->
+      <div id="step-1" class="step-card glass-card p-8 md:p-12 rounded-3xl text-center w-full flex flex-col items-center gap-6">
+        <span class="animate-item text-6xl my-2 select-none inline-block animate-heartbeat filter drop-shadow-[0_0_15px_rgba(251,113,133,0.5)]">❤️</span>
+        <h1 class="animate-item font-serif text-4xl md:text-5xl font-bold bg-gradient-to-r from-pink-200 via-rose-100 to-amber-200 bg-clip-text text-transparent">Hey Beautiful Amma,</h1>
+        <p class="animate-item text-stone-300 leading-relaxed text-sm md:text-base max-w-sm">
+          My Naana helped me build this tiny magical world just for you! Let's explore your birthday surprise together.
+        </p>
+        <span class="animate-item font-handwritten text-3xl text-pink-300">Love, Smaya (with Naana)</span>
+        <button onclick="nextStep(1)" class="animate-item px-8 py-3.5 bg-gradient-to-r from-rose-400 via-pink-500 to-amber-400 text-white rounded-full font-semibold shadow-[0_0_20px_rgba(251,113,133,0.35)] hover:shadow-[0_0_35px_rgba(251,113,133,0.65)] hover:-translate-y-1 hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer">
+          Let's Begin
+        </button>
+      </div>
+
+      <!-- STEP 2: The Core Message -->
+      <div id="step-2" class="step-card hidden glass-card p-8 md:p-12 rounded-3xl text-center w-full flex flex-col items-center gap-6">
+        <span class="animate-item text-6xl my-2 select-none inline-block">👑</span>
+        <h2 class="animate-item font-serif text-3xl md:text-4xl font-bold bg-gradient-to-r from-pink-200 via-rose-100 to-amber-200 bg-clip-text text-transparent">Happy Birthday, Amma!</h2>
+        <p class="animate-item text-stone-300 leading-relaxed text-sm md:text-base max-w-sm">
+          You are the sweetest, kindest, and most beautiful mother in the whole wide universe. I am so happy to be your little girl!
+        </p>
+        <button onclick="nextStep(2)" class="animate-item px-8 py-3.5 bg-gradient-to-r from-rose-400 via-pink-500 to-amber-400 text-white rounded-full font-semibold shadow-[0_0_20px_rgba(251,113,133,0.35)] hover:shadow-[0_0_35px_rgba(251,113,133,0.65)] hover:-translate-y-1 hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer">
+          There's more...
+        </button>
+      </div>
+
+      <!-- STEP 3: The Reasons Why (Bento Grid) -->
+      <div id="step-3" class="step-card hidden glass-card p-6 md:p-8 rounded-3xl w-full flex flex-col items-center gap-6">
+        <h2 class="animate-item font-serif text-3xl md:text-4xl font-bold bg-gradient-to-r from-pink-200 via-rose-100 to-amber-200 bg-clip-text text-transparent text-center">Why You Are My Superhero</h2>
+        
+        <!-- Bento Layout -->
+        <div class="animate-item grid grid-cols-1 md:grid-cols-2 gap-4 w-full text-left my-2">
+          <!-- Bento Card 1 (Large) -->
+          <div class="md:col-span-2 p-5 rounded-2xl bg-white/5 border border-rose-500/10 backdrop-blur-md hover:border-pink-500/20 transition-all duration-300 group">
+            <h4 class="text-pink-300 font-serif text-lg font-semibold mb-1 group-hover:text-pink-200 transition-colors">🤗 Warm Marshmallow Hugs</h4>
+            <p class="text-stone-300 text-sm leading-relaxed">Whenever you hug me, everything feels safe and warm. Your hugs are my favorite place in the whole world.</p>
+          </div>
+          <!-- Bento Card 2 (Small) -->
+          <div class="p-5 rounded-2xl bg-white/5 border border-rose-500/10 backdrop-blur-md hover:border-pink-500/20 transition-all duration-300 group">
+            <h4 class="text-pink-300 font-serif text-lg font-semibold mb-1 group-hover:text-pink-200 transition-colors">🍬 Sweet Candy Kisses</h4>
+            <p class="text-stone-300 text-sm leading-relaxed">Your kisses are like sweet treats that make me giggle and smile every single day.</p>
+          </div>
+          <!-- Bento Deco Helper Card (Provides beautiful grid balance) -->
+          <div class="p-5 rounded-2xl bg-gradient-to-br from-pink-500/10 to-rose-500/10 border border-rose-500/10 backdrop-blur-md flex items-center justify-center text-center">
+            <span class="text-pink-300 font-serif text-lg font-semibold italic">My best friend forever...</span>
+          </div>
+          <!-- Bento Card 3 (Large) -->
+          <div class="md:col-span-2 p-5 rounded-2xl bg-white/5 border border-rose-500/10 backdrop-blur-md hover:border-pink-500/20 transition-all duration-300 group">
+            <h4 class="text-pink-300 font-serif text-lg font-semibold mb-1 group-hover:text-pink-200 transition-colors">🎡 Blanket Forts & Stories</h4>
+            <p class="text-stone-300 text-sm leading-relaxed">I love it when you read to me, sing songs, and play with me. You make everything feel like a fun fairytale!</p>
+          </div>
+        </div>
+
+        <button onclick="nextStep(3)" class="animate-item px-8 py-3.5 bg-gradient-to-r from-rose-400 via-pink-500 to-amber-400 text-white rounded-full font-semibold shadow-[0_0_20px_rgba(251,113,133,0.35)] hover:shadow-[0_0_35px_rgba(251,113,133,0.65)] hover:-translate-y-1 hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer">
+          See this, Amma!
+        </button>
+      </div>
+
+      <!-- STEP 4: The Shared Memory (Polaroid Scrapbook Collage) -->
+      <div id="step-4" class="step-card hidden glass-card p-6 md:p-8 rounded-3xl text-center w-full flex flex-col items-center gap-6">
+        <h2 class="animate-item font-serif text-3xl md:text-4xl font-bold bg-gradient-to-r from-pink-200 via-rose-100 to-amber-200 bg-clip-text text-transparent">Our Happy Pictures...</h2>
+        
+        <!-- 3D Interactive Polaroid Collage Frame -->
+        <div id="polaroid-wrapper" class="perspective-1000 my-4 flex flex-col sm:flex-row items-center justify-center gap-6 w-full cursor-grab active:cursor-grabbing">
+          
+          <!-- Polaroid 1: Family selfie -->
+          <div id="polaroid-1" class="bg-white p-3 pb-5 shadow-[0_20px_40px_rgba(0,0,0,0.5)] rounded-sm transform rotate-[-4deg] transition-all duration-100 ease-out border border-gray-100 text-black max-w-[210px] w-full">
+            <div class="overflow-hidden aspect-[4/5] rounded-sm bg-stone-100 flex items-center justify-center">
+              <img src="family.jpg" alt="Our Beautiful Family Photo" onerror="this.style.display='none'; document.getElementById('image-fallback-1').classList.remove('hidden');" class="w-full h-full object-cover">
+              <div id="image-fallback-1" class="hidden text-stone-500 text-center p-3">
+                <span class="text-2xl block mb-1">📸</span>
+                <span class="text-[9px] font-sans block leading-tight">Save your first photo as "family.jpg" to show it here!</span>
+              </div>
+            </div>
+            <div class="text-center mt-3 font-handwritten text-2xl text-stone-800 select-none">
+              Me, Amma & Naana!
+            </div>
+          </div>
+
+          <!-- Polaroid 2: Smaya & Amma -->
+          <div id="polaroid-2" class="bg-white p-3 pb-5 shadow-[0_20px_40px_rgba(0,0,0,0.5)] rounded-sm transform rotate-[4deg] transition-all duration-100 ease-out border border-gray-100 text-black max-w-[210px] w-full sm:-ml-4">
+            <div class="overflow-hidden aspect-[4/5] rounded-sm bg-stone-100 flex items-center justify-center">
+              <img src="smaya_mother.jpg" alt="Smaya and Amma" onerror="this.style.display='none'; document.getElementById('image-fallback-2').classList.remove('hidden');" class="w-full h-full object-cover">
+              <div id="image-fallback-2" class="hidden text-stone-500 text-center p-3">
+                <span class="text-2xl block mb-1">📸</span>
+                <span class="text-[9px] font-sans block leading-tight">Save your second photo as "smaya_mother.jpg" to show it here!</span>
+              </div>
+            </div>
+            <div class="text-center mt-3 font-handwritten text-2xl text-stone-800 select-none">
+              Me & My Amma!
+            </div>
+          </div>
+
+        </div>
+
+        <p class="animate-item text-stone-300 leading-relaxed text-sm md:text-base max-w-sm">
+          Every single day spent with you is full of fun. I love you to the moon and back!
+        </p>
+        <button onclick="nextStep(4)" class="animate-item px-8 py-3.5 bg-gradient-to-r from-rose-400 via-pink-500 to-amber-400 text-white rounded-full font-semibold shadow-[0_0_20px_rgba(251,113,133,0.35)] hover:shadow-[0_0_35px_rgba(251,113,133,0.65)] hover:-translate-y-1 hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer">
+          One last surprise...
+        </button>
+      </div>
+
+      <!-- STEP 5: The Birthday Wish & Finale -->
+      <div id="step-5" class="step-card hidden glass-card p-8 md:p-12 rounded-3xl text-center w-full flex flex-col items-center gap-6">
+        <span class="animate-item text-6xl my-2 select-none">🎈</span>
+        <h2 class="animate-item font-serif text-3xl md:text-4xl font-bold bg-gradient-to-r from-pink-200 via-rose-100 to-amber-200 bg-clip-text text-transparent">My Little Wish For You</h2>
+        <p id="wish-description" class="animate-item text-stone-300 leading-relaxed text-sm md:text-base max-w-sm transition-all duration-500">
+          I wish you infinite smiles, happy days, and all the ice cream in the universe. I promise to always be your good little girl!
+        </p>
+
+        <!-- Container for Finale Message -->
+        <div id="final-message" class="hidden my-4 text-center">
+          <div class="text-3xl md:text-4xl font-serif font-bold text-pink-400 drop-shadow-[0_0_15px_rgba(244,63,94,0.4)]">
+            Happy Birthday, Amma! ❤️
+          </div>
+          <div class="text-xl md:text-2xl font-handwritten text-stone-300 mt-2">
+            With tons of love, Smaya and Naana
+          </div>
+        </div>
+
+        <button id="celebrate-btn" onclick="startFinale()" class="animate-item px-8 py-3.5 bg-gradient-to-r from-rose-400 via-pink-500 to-amber-400 text-white rounded-full font-semibold shadow-[0_0_20px_rgba(251,113,133,0.35)] hover:shadow-[0_0_35px_rgba(251,113,133,0.65)] hover:-translate-y-1 hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer">
+          Celebrate Amma!
+        </button>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer Info -->
+  <footer class="text-center pb-6 text-[10px] md:text-xs text-stone-500/60 font-sans z-10 pointer-events-none tracking-wider">
+    Made by Smaya & Naana with ❤️ for Amma.
+  </footer>
+
+  <script>
+    // --- AUDIO CONTROLS ---
+    let isPlaying = false;
+
+    function playMusic() {
+      const music = document.getElementById('bg-music');
+      const iconOn = document.getElementById('music-icon-on');
+      const iconOff = document.getElementById('music-icon-off');
+      if (!music) return;
+
+      music.volume = 0.5;
+      music.play()
+        .then(() => {
+          isPlaying = true;
+          iconOn.classList.remove('hidden');
+          iconOff.classList.add('hidden');
+          console.log("Audio playing successfully.");
+        })
+        .catch(e => {
+          console.warn("Audio playback initially blocked or loading: ", e);
+        });
+    }
+
+    function toggleMusic() {
+      const music = document.getElementById('bg-music');
+      const iconOn = document.getElementById('music-icon-on');
+      const iconOff = document.getElementById('music-icon-off');
+      if (!music) return;
+
+      if (isPlaying) {
+        music.pause();
+        iconOn.classList.add('hidden');
+        iconOff.classList.remove('hidden');
+        isPlaying = false;
+      } else {
+        music.play()
+          .then(() => {
+            isPlaying = true;
+            iconOn.classList.remove('hidden');
+            iconOff.classList.add('hidden');
+          })
+          .catch(e => {
+            console.error("Manual playback blocked: ", e);
+          });
+      }
+    }
+
+    // --- AUTOMATIC LOAD & INTERACTION HANDLERS FOR AUDIO ---
+    window.addEventListener('DOMContentLoaded', () => {
+      playMusic();
+    });
+
+    const startAudioOnInteraction = () => {
+      if (!isPlaying) {
+        playMusic();
+      }
+      document.removeEventListener('click', startAudioOnInteraction);
+      document.removeEventListener('touchstart', startAudioOnInteraction);
+    };
+
+    document.addEventListener('click', startAudioOnInteraction);
+    document.addEventListener('touchstart', startAudioOnInteraction);
+
+
+    // --- GLOBAL VARIABLES & STEP NAVIGATION ---
+    let currentStepNum = 1;
+
+    function transitionStep(fromStep, toStep) {
+      const fromEl = document.getElementById(`step-${fromStep}`);
+      const toEl = document.getElementById(`step-${toStep}`);
+
+      // Smoothly update the visual progress bar position
+      const progressPercentage = (toStep / 5) * 100;
+      document.getElementById('progress-fill').style.width = `${progressPercentage}%`;
+
+      // GSAP Timed Sequence for fading steps out/in cleanly
+      const tl = gsap.timeline();
+      tl.to(fromEl, {
+        opacity: 0,
+        scale: 0.92,
+        y: -20,
+        duration: 0.4,
+        ease: 'power2.in',
+        onComplete: () => {
+          fromEl.classList.add('hidden');
+          toEl.classList.remove('hidden');
+          // Prepare incoming layout positioning
+          gsap.set(toEl, { opacity: 0, scale: 0.92, y: 20 });
+        }
+      });
+
+      tl.to(toEl, {
+        opacity: 1,
+        scale: 1,
+        y: 0,
+        duration: 0.5,
+        ease: 'power2.out'
+      });
+
+      // Stagger internal text elements, emojis and buttons
+      const textElements = toEl.querySelectorAll('.animate-item');
+      if (textElements.length > 0) {
+        tl.fromTo(textElements, 
+          { opacity: 0, y: 15 },
+          { opacity: 1, y: 0, stagger: 0.08, duration: 0.4, ease: 'power2.out' },
+          "-=0.3"
+        );
+      }
+    }
+
+    function nextStep(stepNum) {
+      if (stepNum === 1) {
+        playMusic();
+      }
+
+      if (stepNum < 5) {
+        transitionStep(stepNum, stepNum + 1);
+        currentStepNum = stepNum + 1;
+      }
+    }
+
+    // --- THREEJS BACKGROUND: 3D FLOATING HEARTS SCENE ---
+    let scene, camera, renderer, hearts = [];
+
+    function initThree() {
+      const canvas = document.getElementById('three-canvas');
+      if (!canvas) return;
+
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.z = 15;
+
+      renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+      // Construct a mathematically styled 3D Extruded Heart Shape
+      const heartShape = new THREE.Shape();
+      heartShape.moveTo( 25, 25 );
+      heartShape.bezierCurveTo( 25, 25, 20, 0, 0, 0 );
+      heartShape.bezierCurveTo( -30, 0, -30, 35, -30, 35 );
+      heartShape.bezierCurveTo( -30, 55, -10, 77, 25, 95 );
+      heartShape.bezierCurveTo( 60, 77, 80, 55, 80, 35 );
+      heartShape.bezierCurveTo( 80, 35, 80, 0, 50, 0 );
+      heartShape.bezierCurveTo( 35, 0, 25, 25, 25, 25 );
+
+      const extrudeSettings = {
+        depth: 6,
+        bevelEnabled: true,
+        bevelSegments: 4,
+        steps: 2,
+        bevelSize: 2,
+        bevelThickness: 3
+      };
+
+      const geometry = new THREE.ExtrudeGeometry(heartShape, extrudeSettings);
+      geometry.center(); // Re-center coordinate matrix pivot point
+
+      // Marshmallow cotton-candy palette (soft rose, cream rose, honey gold, sweet lavender, cloud blue)
+      const palette = [0xff7597, 0xfecdd3, 0xfde047, 0xc084fc, 0x67e8f9];
+
+      // Spawn 22 floating elements randomly distributed in 3D space
+      const heartCount = 22;
+      for (let i = 0; i < heartCount; i++) {
+        const materialColor = palette[Math.floor(Math.random() * palette.length)];
+        const material = new THREE.MeshPhysicalMaterial({
+          color: materialColor,
+          roughness: 0.25,
+          metalness: 0.1,
+          clearcoat: 0.8,
+          clearcoatRoughness: 0.2,
+          side: THREE.DoubleSide
+        });
+
+        const mesh = new THREE.Mesh(geometry, material);
+
+        // Resize shapes down to prevent layout overlaps
+        const randomScale = 0.02 + Math.random() * 0.035;
+        mesh.scale.set(randomScale, randomScale, randomScale);
+
+        // Distribute within scene parameters
+        mesh.position.set(
+          (Math.random() - 0.5) * 32,
+          (Math.random() - 0.5) * 18,
+          (Math.random() - 0.5) * 12 - 4
+        );
+
+        mesh.rotation.x = Math.random() * Math.PI;
+        mesh.rotation.y = Math.random() * Math.PI;
+        mesh.rotation.z = Math.random() * Math.PI;
+
+        scene.add(mesh);
+
+        hearts.push({
+          mesh: mesh,
+          speedY: 0.008 + Math.random() * 0.015,
+          rotSpeedX: (Math.random() - 0.5) * 0.006,
+          rotSpeedY: (Math.random() - 0.5) * 0.006,
+          sineOffset: Math.random() * Math.PI * 2,
+          sineSpeed: 0.0015 + Math.random() * 0.002,
+          initialX: mesh.position.x,
+          swirling: false
+        });
+      }
+
+      // Dynamic studio lighting setup
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
+      scene.add(ambientLight);
+
+      const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+      dirLight.position.set(5, 10, 7);
+      scene.add(dirLight);
+
+      const pointLight = new THREE.PointLight(0xff7597, 1.5, 50);
+      pointLight.position.set(0, 0, 5);
+      scene.add(pointLight);
+
+      camera.position.z = 15;
+
+      // Rendering Loop
+      let clock = new THREE.Clock();
+      function animate() {
+        requestAnimationFrame(animate);
+        const elapsedTime = clock.getElapsedTime();
+
+        hearts.forEach((h, idx) => {
+          if (!h.swirling) {
+            h.mesh.position.y += h.speedY;
+
+            if (h.mesh.position.y > 11) {
+              h.mesh.position.y = -11;
+              h.mesh.position.x = (Math.random() - 0.5) * 32;
+            }
+
+            h.mesh.position.x = h.initialX + Math.sin(elapsedTime * 1.5 + h.sineOffset) * 1.2;
+            h.mesh.rotation.x += h.rotSpeedX;
+            h.mesh.rotation.y += h.rotSpeedY;
+          } else {
+            h.mesh.position.y += h.speedY * 6;
+            h.mesh.position.x += Math.sin(elapsedTime * 8 + idx) * 0.45;
+            h.mesh.rotation.x += h.rotSpeedX * 6;
+            h.mesh.rotation.y += h.rotSpeedY * 6;
+          }
+        });
+
+        renderer.render(scene, camera);
+      }
+      animate();
+
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    }
+
+    // Run WebGL initialization gracefully
+    try {
+      initThree();
+    } catch (e) {
+      console.warn("Three.js initialization failed: ", e);
+    }
+
+    // --- STEP 4: 3D COLLAGE PARALLAX INTERACTION ---
+    const wrapper = document.getElementById('polaroid-wrapper');
+    const p1 = document.getElementById('polaroid-1');
+    const p2 = document.getElementById('polaroid-2');
+
+    if (wrapper && p1 && p2) {
+      wrapper.addEventListener('mousemove', (e) => {
+        const bounds = wrapper.getBoundingClientRect();
+        const cursorX = e.clientX - bounds.left - bounds.width / 2;
+        const cursorY = e.clientY - bounds.top - bounds.height / 2;
+        
+        const angleX = -(cursorY / bounds.height) * 16;
+        const angleY = (cursorX / bounds.width) * 16;
+
+        gsap.to(p1, {
+          rotationX: angleX,
+          rotationY: angleY - 4, // Maintains native tilt offset
+          transformPerspective: 1000,
+          scale: 1.04,
+          zIndex: 20,
+          duration: 0.35,
+          ease: 'power2.out'
+        });
+
+        gsap.to(p2, {
+          rotationX: angleX,
+          rotationY: angleY + 4, // Maintains native tilt offset
+          transformPerspective: 1000,
+          scale: 1.04,
+          zIndex: 30,
+          duration: 0.35,
+          ease: 'power2.out'
+        });
+      });
+
+      wrapper.addEventListener('mouseleave', () => {
+        gsap.to(p1, {
+          rotationX: 0,
+          rotationY: -4,
+          scale: 1,
+          zIndex: 10,
+          duration: 0.6,
+          ease: 'power2.out'
+        });
+
+        gsap.to(p2, {
+          rotationX: 0,
+          rotationY: 4,
+          scale: 1,
+          zIndex: 11,
+          duration: 0.6,
+          ease: 'power2.out'
+        });
+      });
+    }
+
+    // --- STEP 5: THE GRAND FINALE ANIMATION ---
+    function startFinale() {
+      const celebrateButton = document.getElementById('celebrate-btn');
+      if (!celebrateButton) return;
+
+      celebrateButton.disabled = true;
+
+      // Animate action button out of viewport
+      gsap.to(celebrateButton, {
+        opacity: 0,
+        y: 12,
+        duration: 0.4,
+        ease: 'power2.in',
+        onComplete: () => {
+          celebrateButton.classList.add('hidden');
+        }
+      });
+
+      // Slide and scale in the final hidden birthday wish text
+      const wishText = document.getElementById('wish-description');
+      const finalMessage = document.getElementById('final-message');
+      
+      if (wishText) {
+        gsap.to(wishText, {
+          opacity: 0,
+          y: -10,
+          duration: 0.4,
+          onComplete: () => {
+            wishText.classList.add('hidden');
+            if (finalMessage) {
+              finalMessage.classList.remove('hidden');
+              gsap.fromTo(finalMessage, 
+                { opacity: 0, scale: 0.85, y: 15 },
+                { opacity: 1, scale: 1, y: 0, duration: 0.8, ease: 'back.out(1.6)' }
+              );
+            }
+          }
+        });
+      }
+
+      // --- MULTI-LAYERED CONFETTI SEQUENCE ---
+      confetti({
+        particleCount: 90,
+        angle: 60,
+        spread: 50,
+        origin: { x: 0, y: 0.85 },
+        colors: ['#ff7597', '#fecdd3', '#ffd700', '#c084fc']
+      });
+      confetti({
+        particleCount: 90,
+        angle: 120,
+        spread: 50,
+        origin: { x: 1, y: 0.85 },
+        colors: ['#ff7597', '#fecdd3', '#ffd700', '#c084fc']
+      });
+
+      let customEmojiShapes = [];
+      try {
+        customEmojiShapes = [
+          confetti.shapeFromText({ text: '❤️' }),
+          confetti.shapeFromText({ text: '💖' }),
+          confetti.shapeFromText({ text: '✨' })
+        ];
+      } catch (err) {
+        customEmojiShapes = null;
+      }
+
+      const runDuration = 5000;
+      const animationEnd = Date.now() + runDuration;
+
+      const rainInterval = setInterval(() => {
+        const timeRemaining = animationEnd - Date.now();
+
+        if (timeRemaining <= 0) {
+          return clearInterval(rainInterval);
+        }
+
+        confetti({
+          particleCount: 8,
+          angle: 60,
+          spread: 45,
+          origin: { x: 0, y: 0.8 },
+          colors: ['#ff7597', '#fecdd3', '#ffd700']
+        });
+
+        confetti({
+          particleCount: 8,
+          angle: 120,
+          spread: 45,
+          origin: { x: 1, y: 0.8 },
+          colors: ['#ff7597', '#fecdd3', '#ffd700']
+        });
+
+        if (customEmojiShapes) {
+          confetti({
+            particleCount: 5,
+            scalar: 2.2,
+            shapes: customEmojiShapes,
+            origin: { x: Math.random(), y: Math.random() - 0.2 },
+            spread: 360,
+            ticks: 80
+          });
+        }
+      }, 250);
+
+      // --- 3D BACKGROUND SWIRL SEQUENCE ---
+      hearts.forEach((h) => {
+        h.swirling = true;
+        gsap.to(h.mesh.scale, {
+          x: 0,
+          y: 0,
+          z: 0,
+          duration: 3.5 + Math.random() * 2,
+          ease: 'power1.in'
+        });
+      });
+    }
+  </script>
+</body>
+</html>
